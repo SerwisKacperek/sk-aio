@@ -1,0 +1,21 @@
+from typing import TYPE_CHECKING
+import logging
+
+from sk_aio.models import PluginAction, PluginAPI
+
+if TYPE_CHECKING:
+    from ..plugin import DebugPlugin
+
+class ConsoleOutputAction(PluginAction):
+    def __init__(self, parent: 'DebugPlugin') -> None:
+        super().__init__(
+            name="console_output",
+            description="Outputs a single string into the console",
+            method=self.run,
+            plugin=parent,
+            args=None
+        )
+
+    async def run(self, api: PluginAPI) -> None:
+        api.log("Hello World!", level=logging.INFO)
+        return

@@ -1,0 +1,28 @@
+from typing import TYPE_CHECKING
+import logging
+import time
+import random
+
+from sk_aio.models import PluginAction, PluginAPI
+
+if TYPE_CHECKING:
+    from ..plugin import DebugPlugin
+
+class AsyncAction(PluginAction):
+    def __init__(self, parent: 'DebugPlugin') -> None:
+        super().__init__(
+            name="async_action",
+            description="Sleep for a random amount of time.",
+            method=self.run,
+            plugin=parent,
+            args=None
+        )
+
+    async def run(self, api: PluginAPI) -> None:
+        api.log("Going for a quick nap a few times...", level=logging.INFO)
+        for i in range(3):
+            nap_time = random.randint(1,5)
+            time.sleep(nap_time)
+            api.log("Went to sleep for "+str(nap_time)+" seconds.")
+        api.log("Nap time over.")
+        return

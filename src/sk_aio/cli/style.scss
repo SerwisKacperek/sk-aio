@@ -1,0 +1,169 @@
+AllInOne {
+  &.-compact {
+    & AppHeader {
+      padding: 0 1;
+    }
+    & AppBody {
+      padding: 0;
+    }
+    & PluginSearchBar {
+      padding: 0;
+    }
+    & Footer {
+      padding-left: 0;
+    }
+    & .section {
+      border: none;
+    }
+  }
+}
+
+AppHeader {
+  color: $text-primary;
+  padding: 1 3;
+  height: auto;
+}
+
+/* PluginsSelectScreen */
+
+AppBody {
+  padding: 0 2;
+  layout: horizontal;
+}
+
+Footer {
+  padding-left: 2;
+}
+
+PluginSearchBar {
+    height: auto;
+    padding: 0 3 0 3;
+
+    & #search-row {
+        height: 2;
+    }
+
+    & #filter-selector {
+        width: 16;
+        height: 2;
+        &:blur SelectCurrent {
+            background: $primary-muted;
+            #label {
+            color: $text-primary;
+            }
+        }
+    }
+}
+
+PluginSeachFilters {
+  min-width: 8;
+  background: $accent-muted;
+  color: $text-accent;
+  text-style: b;
+  &:hover {
+    background-tint: $text-accent 10%;
+  }
+}
+
+PluginPropertiesArea {
+  height: 1fr;
+  dock: left;
+  width: auto;
+  min-width: 35%;
+  max-width: 64;
+
+  #empty-item-properties {
+    color: $text-muted;
+    padding: 1 2;
+    width: 24;
+  }
+}
+
+.section {
+  border: round $accent 40%;
+  border-title-color: $text-accent 50%;
+  border-title-align: right;
+
+  &:focus-within {
+    border: round $accent 100%;
+    border-title-color: $foreground;
+    border-title-style: b;
+  }
+
+}
+
+Input {
+  padding: 0 1;
+  width: 1fr;
+  height: 1;
+  border: none;
+  &.-invalid {
+    padding-left: 0;
+    border-left: outer $error;
+  }
+
+  &:focus {
+    border: none;
+    padding: 0 1;
+    padding-left: 0;
+    border-left: outer $surface-lighten-1;
+    &.-invalid {
+      border-left: outer $error;
+    }
+  }
+
+  &.error {
+      border-left: thick $error;
+  }
+}
+
+Button {
+  padding: 0 1;
+  height: 1;
+  border: none;
+
+  &:disabled {
+    opacity: 40%;
+  }
+}
+
+Select {
+  height: 1;
+  border: none;
+  padding: 0;
+  &:focus {
+    #label {
+      color: $block-cursor-foreground;
+    }
+    SelectCurrent {
+      background: $block-cursor-background;
+      .arrow {
+        color: $block-cursor-foreground;
+      }
+    }
+  }
+  
+  SelectCurrent {
+    height: 1;
+    border: none;
+    padding: 0 1;
+    background: $surface;
+
+    .arrow {
+      color: $text-disabled;
+    }
+  }
+
+  & > SelectOverlay {
+    padding: 0;
+    border: none;
+  }
+
+}
+
+/* PluginArgumentScreen */
+PluginArgumentScreen {
+  #selected_plugin_name {
+    padding-bottom: 1;
+  }
+}

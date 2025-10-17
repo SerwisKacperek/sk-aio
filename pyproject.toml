@@ -1,0 +1,12 @@
+[project]
+name = "sk_aio"
+version = "0.0.1"
+description = "All-In-One tool collection from Serwis Kacperek"
+authors = [
+    { name = "Kacper Baum-Azbum", email="kbaumazbum@gmail.com" }
+]
+readme = "README.md"
+requires-python = ">= 3.12.5"
+
+[project.scripts]
+sk_aio = "sk_aio.__main__:cli"
