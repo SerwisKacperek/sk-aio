@@ -6,7 +6,7 @@ from textual import on
 from textual.app import ComposeResult
 from textual.screen import Screen
 from textual.binding import Binding
-from textual.widgets import Footer, TabbedContent, TabPane
+from textual.widgets import Footer, TabbedContent, TabPane, Log 
 from textual.reactive import Reactive, reactive
 from textual.containers import Vertical
 
@@ -16,7 +16,6 @@ from sk_aio.models import PluginAction
 from sk_aio.cli import SETTINGS
 from sk_aio.cli.messages import SwitchToPluginSelectScreen, SwitchToActionArgumentsScreen
 from sk_aio.cli.screens import AppHeader
-from sk_aio.cli.widgets import TextEditor, ConsoleOutput
 
 from sk_aio.cli.messages import (
     PluginOutputMessage,
@@ -60,6 +59,18 @@ class PluginOutputScreen(Screen[Any]):
         worker_manager = SETTINGS.get().worker_manager
         worker_manager.run_action(self.action.plugin, self.action)
 
+    def on_mount(self) -> None:
+        handlers: List[BufferedHandler] = list(filter(lambda h: isinstance(h, BufferedHandler), logger.handlers)) # type: ignore
+        buffered_handler = next((h for h in handlers if isinstance(h, BufferedHandler)), None)
+
+        if buffered_handler is not None:
+            self.console_output = buffered_handler.buffer
+            self.log_widget.clear()
+            self.log_widget.write_lines(buffered_handler.buffer)
+            self.log_widget.refresh()
+        else:
+            self.app.log("'BufferedHandler' was not found in the 'PluginOutputScreen'!")
+
     def compose(self) -> ComposeResult:
         yield AppHeader()
 
@@ -69,8 +80,9 @@ class PluginOutputScreen(Screen[Any]):
             plugin_output_area.add_class("section")
             with TabbedContent() as tabbing_content:
                 with TabPane("Console"):
-                    text_area = ConsoleOutput()
-                    yield TextEditor(text_area)
+                    yield Log(auto_scroll=True)
+                    # text_area = ConsoleOutput()
+                    # yield TextEditor(text_area)
                 # TODO: Check if a plugin has any output
                 # with TabPane("Output"):
                 #     yield
@@ -84,9 +96,9 @@ class PluginOutputScreen(Screen[Any]):
         if console_output is None:
             return
 
-        console_output_text_area = self.text_editor.text_area
-        console_output_text_area.text = "\n".join(console_output)
-        console_output_text_area.refresh()
+        # self.log_widget.clear()
+        # self.log_widget.write_lines(console_output)
+        # self.log_widget.refresh()
 
 # region Messages
     @on(AppUpdateLog)
@@ -97,17 +109,13 @@ class PluginOutputScreen(Screen[Any]):
         handlers: List[BufferedHandler] = list(filter(lambda h: isinstance(h, BufferedHandler), logger.handlers)) # type: ignore
         buffered_handler = next((h for h in handlers if isinstance(h, BufferedHandler)), None)
 
-        # logging.getLogger(__name__).debug("what the helly")
-        # logging.getLogger(__name__).debug(buffered_handler)
-        # self.app.log("co jest kurwa")
-        # self.app.log(buffered_handler)
-
         if buffered_handler is not None:
-            #self.console_output = handlers[0].buffer
             self.console_output = buffered_handler.buffer
-            self.watch_console_output(self.console_output)
+            # self.watch_console_output(self.console_output)
         else:
             self.app.log("'BufferedHandler' was not found in the 'PluginOutputScreen'!")
+
+        self.log_widget.write_line(message.event.message)
 
     # TODO: REMOVE
     @on(PluginOutputMessage)
@@ -144,6 +152,6 @@ class PluginOutputScreen(Screen[Any]):
 
 # region Properties
     @property
-    def text_editor(self) -> TextEditor:
-        return self.query_one(TextEditor)
+    def log_widget(self) -> Log:
+        return self.query_one(Log)
 # endregion
