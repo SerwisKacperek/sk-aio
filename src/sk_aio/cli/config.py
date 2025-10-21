@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, Any
 from unittest.mock import MagicMock
 from contextvars import ContextVar
 
@@ -19,6 +19,18 @@ class PluginPropertiesSettings(BaseModel):
 
     position: Literal["left", "right"] = Field(default="left")
 
+class CustomTextLogFormatterSettings(BaseModel):
+    """Settings for the CustomTextLogFormatter class."""
+
+    fmt: str = Field(defaul="%(message)s")
+    datefmt: str = Field(default="%H:%M:%S")
+    style: Literal["%", "{", "$"] = Field(default="{")
+    validate: bool = Field(default=True)
+    defaults: dict[str, Any] = Field(default={
+        "plugin": None,
+        "action": None,
+    })
+
 class Settings(BaseSettings):
     """Settings model for the SK-AIO application."""
     model_config = SettingsConfigDict(
@@ -35,5 +47,6 @@ class Settings(BaseSettings):
 
     heading: HeadingSettings = Field(default_factory=HeadingSettings)
     plugin_properties: PluginPropertiesSettings = Field(default_factory=PluginPropertiesSettings)
+    custom_text_log: CustomTextLogFormatterSettings = Field(default_factory=CustomTextLogFormatterSettings)
 
 SETTINGS: ContextVar[Settings] = ContextVar("settings")

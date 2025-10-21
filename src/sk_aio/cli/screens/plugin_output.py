@@ -111,7 +111,6 @@ class PluginOutputScreen(Screen[Any]):
 
         if buffered_handler is not None:
             self.console_output = buffered_handler.buffer
-            # self.watch_console_output(self.console_output)
         else:
             self.app.log("'BufferedHandler' was not found in the 'PluginOutputScreen'!")
 

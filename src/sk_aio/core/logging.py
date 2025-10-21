@@ -1,5 +1,25 @@
-from typing import List
-from logging import Handler, LogRecord
+from typing import List, Any
+from logging import Handler, LogRecord, Formatter
+
+class CustomTextLogFormatter(Formatter):
+    def __init__(
+        fmt: str = "%(message)s",
+        datefmt: str = "%H:%M:%S",
+        style: str = "{",
+        validate: bool = True,
+        *,
+        defaults: dict[str, Any] = {
+            "plugin": None,
+            "action": None,
+        },
+    ) -> None:
+        super().__init__(
+            fmt,
+            datefmt,
+            style,
+            validate,
+            defaults
+        )
 
 class BufferedHandler(Handler):
     """
