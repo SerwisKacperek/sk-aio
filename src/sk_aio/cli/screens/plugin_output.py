@@ -11,7 +11,7 @@ from textual.reactive import Reactive, reactive
 from textual.containers import Vertical
 
 from sk_aio import logger
-from sk_aio.core.logging import BufferedHandler
+from sk_aio.core.logging import BufferedHandler, CustomTextLogFormatter
 from sk_aio.models import PluginAction
 from sk_aio.cli import SETTINGS
 from sk_aio.cli.messages import SwitchToPluginSelectScreen, SwitchToActionArgumentsScreen
@@ -26,7 +26,6 @@ from sk_aio.cli.messages import (
 
 if TYPE_CHECKING:
     from sk_aio.cli import AllInOne
-    from sk_aio.core.logging import BufferedHandler
 
 class PluginOutputScreen(Screen[Any]):
     AUTO_FOCUS = None
@@ -43,7 +42,6 @@ class PluginOutputScreen(Screen[Any]):
         ),
     ]
 
-    # TODO: Make this app-wide (show also logs from the application and preserve when changing screens)
     console_output: Reactive[List[str]] = reactive([])
 
     def __init__(
@@ -64,9 +62,9 @@ class PluginOutputScreen(Screen[Any]):
         buffered_handler = next((h for h in handlers if isinstance(h, BufferedHandler)), None)
 
         if buffered_handler is not None:
-            self.console_output = buffered_handler.buffer
+            self.console_output = self._format_log_records(buffered_handler.buffer)
             self.log_widget.clear()
-            self.log_widget.write_lines(buffered_handler.buffer)
+            self.log_widget.write_lines(self.console_output)
             self.log_widget.refresh()
         else:
             self.app.log("'BufferedHandler' was not found in the 'PluginOutputScreen'!")
@@ -81,8 +79,6 @@ class PluginOutputScreen(Screen[Any]):
             with TabbedContent() as tabbing_content:
                 with TabPane("Console"):
                     yield Log(auto_scroll=True)
-                    # text_area = ConsoleOutput()
-                    # yield TextEditor(text_area)
                 # TODO: Check if a plugin has any output
                 # with TabPane("Output"):
                 #     yield
@@ -100,6 +96,12 @@ class PluginOutputScreen(Screen[Any]):
         # self.log_widget.write_lines(console_output)
         # self.log_widget.refresh()
 
+    @staticmethod
+    def _format_log_records(records: List[logging.LogRecord]) -> List[str]:
+        _formatter = CustomTextLogFormatter()
+
+        return [ _formatter.format(msg) for msg in records ]
+
 # region Messages
     @on(AppUpdateLog)
     def handle_update_log(self, message: AppUpdateLog) -> None:
@@ -110,23 +112,18 @@ class PluginOutputScreen(Screen[Any]):
         buffered_handler = next((h for h in handlers if isinstance(h, BufferedHandler)), None)
 
         if buffered_handler is not None:
-            self.console_output = buffered_handler.buffer
+            self.console_output = self._format_log_records(buffered_handler.buffer)
         else:
             self.app.log("'BufferedHandler' was not found in the 'PluginOutputScreen'!")
 
-        self.log_widget.write_line(message.event.message)
+        formatted_message = self._format_log_records([message.event.message])
+        self.log_widget.write_line(formatted_message[0])
 
     # TODO: REMOVE
     @on(PluginOutputMessage)
     def handle_plugin_output(self, message: PluginOutputMessage) -> None:
-        output_string = ""
-
-        output_string += f"[{message.plugin}]"
-        if message.action is not None:
-            output_string += f"[{message.action}]"
-        output_string += f" {message.message}\n"
-
-        self.console_output.append(output_string)
+        formatted_record = self._format_log_records([message.message])
+        self.console_output.append(formatted_record[0])
         self.watch_console_output(self.console_output)
 
     @on(ActionProgressMessage)

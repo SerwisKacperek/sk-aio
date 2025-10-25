@@ -4,12 +4,9 @@ import logging
 
 from textual.logging import TextualHandler
 
-from sk_aio.core.logging import BufferedHandler
+from sk_aio.core.logging import BufferedHandler, CustomTextLogFormatter
 
-formatter = logging.Formatter(
-    fmt="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
-)
+formatter = CustomTextLogFormatter()
 
 # TODO: Don't hardcode log file path
 log_dir = os.path.join(os.path.dirname(__file__), '../..', 'logs')

@@ -4,14 +4,14 @@ import logging
 from bubus import BaseEvent
 
 class AppLogEvent(BaseEvent[None]):
-    message: str
+    message: logging.LogRecord
     widget: str
     level: int = logging.INFO
 
 class PluginLogEvent(BaseEvent[None]):
     plugin: str
     action: Optional[str]
-    message: str
+    message: logging.LogRecord
     level: int = logging.INFO
 
 class ActionProgressEvent(BaseEvent[None]):

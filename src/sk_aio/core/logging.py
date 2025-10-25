@@ -1,25 +1,38 @@
-from typing import List, Any
+from typing import List
 from logging import Handler, LogRecord, Formatter
 
 class CustomTextLogFormatter(Formatter):
     def __init__(
-        fmt: str = "%(message)s",
+        self,
+        fmt: str = "[%(levelname)s]%(plugin)s.%(action)s: %(message)s",
         datefmt: str = "%H:%M:%S",
-        style: str = "{",
+        style: str = '%',
         validate: bool = True,
-        *,
-        defaults: dict[str, Any] = {
-            "plugin": None,
-            "action": None,
-        },
     ) -> None:
         super().__init__(
-            fmt,
-            datefmt,
-            style,
-            validate,
-            defaults
+            fmt=fmt,
+            datefmt=datefmt,
+            style=style,  # type: ignore
+            validate=validate,
+            defaults={
+                'plugin': None,
+                'action': None,
+            },
         )
+
+    def formatMessage(self, record: LogRecord) -> str:
+        output = f"[{record.levelname}]"
+
+        if hasattr(record, "plugin") and record.plugin is not None: # type: ignore
+            output += record.plugin # type: ignore
+            if hasattr(record, "action") and record.action is not None: # type: ignore
+                output += f".{record.action}" # type: ignore
+        else:
+            output += f"{record.name}"
+
+        output += ": "
+        output += record.getMessage()
+        return output
 
 class BufferedHandler(Handler):
     """
@@ -31,21 +44,20 @@ class BufferedHandler(Handler):
     ) -> None:
         super().__init__()
         self.capacity = capacity
-        self._buffer = [] # TODO: Change into a collection
+        self._buffer: List[LogRecord] = [] # TODO: Change into a collection
 
     def emit(
         self,
         record: LogRecord
     ) -> None:
-        message = self.format(record)
-        self.buffer.append(message)
+        self.buffer.append(record)
 
     @property
-    def buffer(self) -> List[str]:
+    def buffer(self) -> List[LogRecord]:
         return self._buffer
 
     @buffer.setter
-    def buffer(self, new_value: List[str]) -> None:
+    def buffer(self, new_value: List[LogRecord]) -> None:
         self._buffer = new_value
 
         if len(self._buffer) > self.capacity:

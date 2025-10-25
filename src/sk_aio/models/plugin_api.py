@@ -23,16 +23,35 @@ class PluginAPI:
         self._plugin_id = plugin_id
         self._current_action: Optional[str] = None
 
+        # Extra logging data
+        self._logger = logging.Logger(self._plugin_id)
+
     def log(
         self,
         message: str,
         level: int = logging.INFO,
     ) -> None:
+        filename, line_numer, function_name, _ = self._logger.findCaller(stack_info=False)
+
+        _log_record = logging.LogRecord(
+            name=f"{self._plugin_id}.{self._current_action}",
+            level=level,
+            pathname=filename,
+            lineno=line_numer,
+            args=(),
+            msg=message,
+            exc_info=None,
+            func=function_name,
+            sinfo=None,
+        )
+        _log_record.__dict__["plugin"] = self._plugin_id
+        _log_record.__dict__["action"] = self._current_action
+
         self._bus.dispatch(
             PluginLogEvent(
                 plugin=self._plugin_id,
                 action=self.current_action,
-                message=message,
+                message=_log_record,
                 level=level
             )
         )
@@ -74,9 +93,9 @@ class PluginAPI:
         return self._current_action
 
     @current_action.setter
-    def current_action(self, name: Optional[str]):
+    def current_action(self, name: Optional[str]) -> None:
         self._current_action = name
 
     @property
-    def plugin_id(self):
+    def plugin_id(self) -> str:
         return self._plugin_id

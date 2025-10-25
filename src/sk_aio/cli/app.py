@@ -115,8 +115,6 @@ class AllInOne(App[None]):
         self,
         event: AppLogEvent | PluginLogEvent
     ) -> None:
-        logging.getLogger(__name__).info(event.message)
-
         if isinstance(self.current_screen, PluginOutputScreen):
             self.current_screen.post_message(
                 AppUpdateLog(event)

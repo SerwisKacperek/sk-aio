@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Optional, Any
 from textual.message import Message
+import logging
 
 if TYPE_CHECKING:
     from sk_aio.cli.screens import (
@@ -75,7 +76,7 @@ class PluginOutputMessage(Message):
         self,
         plugin: str,
         action: Optional[str],
-        message: str
+        message: logging.LogRecord
     ) -> None:
         self.plugin = plugin
         self.action = action
