@@ -18,7 +18,6 @@ from sk_aio.cli.messages import SwitchToPluginSelectScreen, SwitchToActionArgume
 from sk_aio.cli.screens import AppHeader
 
 from sk_aio.cli.messages import (
-    PluginOutputMessage,
     AppUpdateLog,
     ActionProgressMessage,
     ActionCompleteMessage
@@ -63,9 +62,6 @@ class PluginOutputScreen(Screen[Any]):
 
         if buffered_handler is not None:
             self.console_output = self._format_log_records(buffered_handler.buffer)
-            self.log_widget.clear()
-            self.log_widget.write_lines(self.console_output)
-            self.log_widget.refresh()
         else:
             self.app.log("'BufferedHandler' was not found in the 'PluginOutputScreen'!")
 
@@ -85,16 +81,13 @@ class PluginOutputScreen(Screen[Any]):
 
         yield Footer(show_command_palette=False)
 
-    def watch_console_output(
-        self,
-        console_output: List[str]
-    ) -> None:
-        if console_output is None:
+    def watch_console_output(self) -> None:
+        """Update the 'Log' widget, whenever the console_output value changes"""
+        if self.console_output is None:
             return
 
-        # self.log_widget.clear()
-        # self.log_widget.write_lines(console_output)
-        # self.log_widget.refresh()
+        self.log_widget.clear()
+        self.log_widget.write_lines(self.console_output)
 
     @staticmethod
     def _format_log_records(records: List[logging.LogRecord]) -> List[str]:
@@ -115,16 +108,6 @@ class PluginOutputScreen(Screen[Any]):
             self.console_output = self._format_log_records(buffered_handler.buffer)
         else:
             self.app.log("'BufferedHandler' was not found in the 'PluginOutputScreen'!")
-
-        formatted_message = self._format_log_records([message.event.message])
-        self.log_widget.write_line(formatted_message[0])
-
-    # TODO: REMOVE
-    @on(PluginOutputMessage)
-    def handle_plugin_output(self, message: PluginOutputMessage) -> None:
-        formatted_record = self._format_log_records([message.message])
-        self.console_output.append(formatted_record[0])
-        self.watch_console_output(self.console_output)
 
     @on(ActionProgressMessage)
     def handle_plugin_progress(self, message: ActionProgressMessage) -> None:

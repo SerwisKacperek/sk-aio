@@ -71,18 +71,6 @@ class AppUpdateLog(Message):
         self.event = event
         super().__init__()
 
-class PluginOutputMessage(Message):
-    def __init__(
-        self,
-        plugin: str,
-        action: Optional[str],
-        message: logging.LogRecord
-    ) -> None:
-        self.plugin = plugin
-        self.action = action
-        self.message = message
-        super().__init__()
-
 class ActionProgressMessage(Message):
     def __init__(
         self,
