@@ -31,14 +31,23 @@ class PluginAction:
         self.description = description
         self.args = args or []
 
-    def execute(
+    async def execute(
         self,
+        api: 'PluginAPI',
         **kwargs,
     ) -> Any:
         for arg in self.args:
             if arg.required and arg.name not in kwargs:
                 raise ValueError(f"Missing required argument: {arg.name}")
-        return self.method(**kwargs)
+
+        try:
+            result = await self.method(api, **kwargs)
+        except Exception as e:
+            api.error(f"An error occured when running the action...\n{e}")
+            raise e
+        else:
+            api.complete()
+            return result
 
 class BasePlugin:
     id: str
@@ -91,8 +100,5 @@ class BasePlugin:
         name: str
     ) -> Optional[PluginAction]:
         return next((a for a in self.actions if a.name == name), None)
-
-    def exec_action(self, action: PluginAction, **kwargs) -> None:
-        return action.execute(**kwargs)
 
     def configure_action(self, action: PluginAction) -> PluginAction: ...

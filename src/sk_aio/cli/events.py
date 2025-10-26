@@ -10,4 +10,5 @@ def register_events(
     bus.on(AppLogEvent, app.handle_log)
     bus.on(PluginLogEvent, app.handle_log)
     bus.on(ActionProgressEvent, app.handle_action_progress)
+    bus.on(ActionErrorEvent, app.handle_action_error)
     bus.on(ActionCompleteEvent, app.handle_action_complete)

@@ -3,7 +3,8 @@ from sk_aio.models import BasePlugin
 from sk_aio.plugins.debug_plugin.actions import (
     ConsoleOutputAction,
     AsyncAction,
-    MultipleArgumentsActions
+    MultipleArgumentsActions,
+    ErrorAction,
 )
 
 class DebugPlugin(BasePlugin):
@@ -20,4 +21,7 @@ class DebugPlugin(BasePlugin):
         )
         self.register_action(
             AsyncAction(parent=self)
+        )
+        self.register_action(
+            ErrorAction(parent=self)
         )

@@ -127,6 +127,22 @@ class AllInOne(App[None]):
                 ActionProgressMessage(event.plugin, event.action, event.progresss)
             )
 
+    def handle_action_error(self, event: ActionErrorEvent) -> None:
+        logging.getLogger(__name__).handle(event.message)
+        if isinstance(self.current_screen, PluginOutputScreen):
+            self.current_screen.post_message(
+                ActionErrorMessage(event.plugin, event.action, event.message)
+            )
+            self.current_screen.post_message(
+                AppUpdateLog(
+                    PluginLogEvent(
+                        plugin=event.plugin,
+                        action=event.action,
+                        message=event.message
+                    )
+                )
+            )
+
     def handle_action_complete(self, event: ActionCompleteEvent) -> None:
         if isinstance(self.current_screen, PluginOutputScreen):
             self.current_screen.post_message(

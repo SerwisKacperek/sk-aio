@@ -8,7 +8,6 @@ from textual.screen import Screen
 from textual.binding import Binding
 from textual.widgets import Footer, TabbedContent, TabPane, Log 
 from textual.reactive import Reactive, reactive
-from textual.containers import Vertical
 
 from sk_aio import logger
 from sk_aio.core.logging import BufferedHandler, CustomTextLogFormatter
@@ -16,10 +15,12 @@ from sk_aio.models import PluginAction
 from sk_aio.cli import SETTINGS
 from sk_aio.cli.messages import SwitchToPluginSelectScreen, SwitchToActionArgumentsScreen
 from sk_aio.cli.screens import AppHeader
+from sk_aio.cli.widgets import PluginOutputArea
 
 from sk_aio.cli.messages import (
     AppUpdateLog,
     ActionProgressMessage,
+    ActionErrorMessage,
     ActionCompleteMessage
 )
 
@@ -68,11 +69,8 @@ class PluginOutputScreen(Screen[Any]):
     def compose(self) -> ComposeResult:
         yield AppHeader()
 
-        # TODO: Create a widget for this area so that it can be accessed from other methods
-        with Vertical() as plugin_output_area:
-            plugin_output_area.border_title = "Plugin Output"
-            plugin_output_area.add_class("section")
-            with TabbedContent() as tabbing_content:
+        with PluginOutputArea():
+            with TabbedContent():
                 with TabPane("Console"):
                     yield Log(auto_scroll=True)
                 # TODO: Check if a plugin has any output
@@ -110,14 +108,18 @@ class PluginOutputScreen(Screen[Any]):
             self.app.log("'BufferedHandler' was not found in the 'PluginOutputScreen'!")
 
     @on(ActionProgressMessage)
-    def handle_plugin_progress(self, message: ActionProgressMessage) -> None:
+    def handle_action_progress(self, message: ActionProgressMessage) -> None:
         pass
-        #raise NotImplementedError
+
+    @on(ActionErrorMessage)
+    def handle_action_error(self, message: ActionErrorMessage) -> None:
+        self.plugin_output_area_widget.plugin_action_state = -1
 
     @on(ActionCompleteMessage)
-    def handle_plugin_complete(self, message: ActionCompleteMessage) -> None:
-        pass
-        #raise NotImplementedError
+    def handle_action_complete(self, message: ActionCompleteMessage) -> None:
+        logging.getLogger(__name__).debug("%s.%s action complete!", message.plugin, message.action)
+        self.plugin_output_area_widget.plugin_action_state = 1
+
 # endregion
 
 # region Actions
@@ -133,4 +135,8 @@ class PluginOutputScreen(Screen[Any]):
     @property
     def log_widget(self) -> Log:
         return self.query_one(Log)
+
+    @property
+    def plugin_output_area_widget(self) -> PluginOutputArea:
+        return self.query_one(PluginOutputArea)
 # endregion

@@ -83,6 +83,18 @@ class ActionProgressMessage(Message):
         self.progress = progresss
         super().__init__()
 
+class ActionErrorMessage(Message):
+    def __init__(
+        self,
+        plugin: str,
+        action: str,
+        message: logging.LogRecord
+    ) -> None:
+        self.plugin = plugin
+        self.action = action
+        self.message = message
+        super().__init__()
+
 class ActionCompleteMessage(Message):
     def __init__(
         self,

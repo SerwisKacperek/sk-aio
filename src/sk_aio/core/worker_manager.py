@@ -52,21 +52,25 @@ class WorkerManager:
             api.current_action = plugin_action.name
             action = plugin_action
 
-        method = action.method
         method_args = {}
         for arg in action.args:
             method_args[arg.name] = getattr(arg, "value", None) if getattr(arg, "value", None) is not None else getattr(arg, "default_value", None)
 
-        def run_sync():
-            logging.getLogger(__name__).debug(f"Starting sync action '{action.name}' ...")
-            method(api, **method_args, **kwargs)
-            api.complete()
+        async def run_sync():
+            logging.getLogger(__name__).debug("Starting sync action '%s' ...", action.name)
+            try:
+                await action.execute(api, **method_args, **kwargs)
+            except Exception as e:
+                logging.getLogger(__name__).error("Failed to run the action:\n%s", e)
 
         def run_async():
-            logging.getLogger(__name__).debug(f"Starting async action '{action.name}' ...")
-            asyncio.run(method(api, **method_args, **kwargs))
+            logging.getLogger(__name__).debug("Starting async action '%s' ...", action.name)
+            try:
+                asyncio.run(action.execute(api, **method_args, **kwargs))
+            except Exception as e:
+                logging.getLogger(__name__).error("Failed to run the action:\n%s", e)
 
-        if asyncio.iscoroutinefunction(method):
+        if asyncio.iscoroutinefunction(action.method):
             threading.Thread(target=run_async, daemon=True).start()
         else:
             threading.Thread(target=run_sync, daemon=True).start()

@@ -4,6 +4,7 @@ import logging
 from sk_aio.models.events import (
     PluginLogEvent,
     ActionProgressEvent,
+    ActionErrorEvent,
     ActionCompleteEvent
 )
 
@@ -26,15 +27,15 @@ class PluginAPI:
         # Extra logging data
         self._logger = logging.Logger(self._plugin_id)
 
-    def log(
+    def _create_log_record(
         self,
         message: str,
-        level: int = logging.INFO,
-    ) -> None:
+        level: int = logging.INFO
+    ) -> logging.LogRecord:
         filename, line_numer, function_name, _ = self._logger.findCaller(stack_info=False)
 
         _log_record = logging.LogRecord(
-            name=f"{self._plugin_id}.{self._current_action}",
+            name=f"{self.plugin_id}.{self.current_action}",
             level=level,
             pathname=filename,
             lineno=line_numer,
@@ -44,14 +45,21 @@ class PluginAPI:
             func=function_name,
             sinfo=None,
         )
-        _log_record.__dict__["plugin"] = self._plugin_id
-        _log_record.__dict__["action"] = self._current_action
+        _log_record.__dict__["plugin"] = self.plugin_id
+        _log_record.__dict__["action"] = self.current_action
 
+        return _log_record
+
+    def log(
+        self,
+        message: str,
+        level: int = logging.INFO,
+    ) -> None:
         self._bus.dispatch(
             PluginLogEvent(
-                plugin=self._plugin_id,
+                plugin=self.plugin_id,
                 action=self.current_action,
-                message=_log_record,
+                message=self._create_log_record(message, level),
                 level=level
             )
         )
@@ -68,6 +76,21 @@ class PluginAPI:
                 plugin=self._plugin_id,
                 action=self.current_action,
                 progresss=percent
+            )
+        )
+
+    def error(
+        self,
+        message: str
+    ) -> None:
+        if self.current_action is None:
+            raise ValueError("Error occured when invoking 'ActionCompleteEvent' - current_action can't be null.")
+
+        self._bus.dispatch(
+            ActionErrorEvent(
+                plugin=self.plugin_id,
+                action=self.current_action,
+                message=self._create_log_record(message, logging.ERROR),
             )
         )
 

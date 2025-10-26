@@ -167,3 +167,15 @@ PluginArgumentScreen {
     padding-bottom: 1;
   }
 }
+
+/* PluginOutputScreen */
+PluginOutputScreen {
+  .action_complete {
+    border: wide green 40% !important;
+    border-title-color: limegreen 50% !important;
+  }
+  .action_error {
+    border: wide red 40% !important;
+    border-title-color: red 50% !important
+  }
+}

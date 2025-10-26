@@ -19,6 +19,11 @@ class ActionProgressEvent(BaseEvent[None]):
     action: str
     progresss: float
 
+class ActionErrorEvent(BaseEvent[None]):
+    plugin: str
+    action: str
+    message: logging.LogRecord
+
 class ActionCompleteEvent(BaseEvent[None]):
     plugin: str
     action: str
