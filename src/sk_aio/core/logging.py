@@ -1,5 +1,6 @@
 from typing import List
 from logging import Handler, LogRecord, Formatter
+import re
 
 class CustomTextLogFormatter(Formatter):
     def __init__(
@@ -20,6 +21,12 @@ class CustomTextLogFormatter(Formatter):
             },
         )
 
+    @staticmethod
+    def strip_ansi(text: str) -> str:
+        """Strip ANSI escape sequences from text."""
+        ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+        return ansi_escape.sub('', text)
+
     def formatMessage(self, record: LogRecord) -> str:
         output = f"[{record.levelname}]"
 
@@ -31,7 +38,7 @@ class CustomTextLogFormatter(Formatter):
             output += f"{record.name}"
 
         output += ": "
-        output += record.getMessage()
+        output += self.strip_ansi(record.getMessage())
         return output
 
 class BufferedHandler(Handler):

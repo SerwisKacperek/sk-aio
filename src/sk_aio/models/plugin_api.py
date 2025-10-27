@@ -64,6 +64,30 @@ class PluginAPI:
             )
         )
 
+    def debug(self, message: str) -> None:
+        return self.log(message, logging.DEBUG)
+
+    def info(self, message: str) -> None:
+        return self.log(message, logging.INFO)
+
+    def warning(self, message: str) -> None:
+        return self.log(message, logging.WARNING)
+
+    def error(
+        self,
+        message: str
+    ) -> None:
+        if self.current_action is None:
+            raise ValueError("Error occured when invoking 'ActionErrorEvent' - current_action can't be null.")
+
+        self._bus.dispatch(
+            ActionErrorEvent(
+                plugin=self.plugin_id,
+                action=self.current_action,
+                message=self._create_log_record(message, logging.ERROR),
+            )
+        )
+
     def progress(
         self,
         percent: float,
@@ -76,21 +100,6 @@ class PluginAPI:
                 plugin=self._plugin_id,
                 action=self.current_action,
                 progresss=percent
-            )
-        )
-
-    def error(
-        self,
-        message: str
-    ) -> None:
-        if self.current_action is None:
-            raise ValueError("Error occured when invoking 'ActionCompleteEvent' - current_action can't be null.")
-
-        self._bus.dispatch(
-            ActionErrorEvent(
-                plugin=self.plugin_id,
-                action=self.current_action,
-                message=self._create_log_record(message, logging.ERROR),
             )
         )
 
