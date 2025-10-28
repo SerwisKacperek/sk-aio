@@ -68,4 +68,4 @@ class BufferedHandler(Handler):
         self._buffer = new_value
 
         if len(self._buffer) > self.capacity:
-            self._buffer.pop(0)
+            self._buffer = self._buffer[-self.capacity:]
