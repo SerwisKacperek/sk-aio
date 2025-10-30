@@ -4,7 +4,7 @@ from textual.app import ComposeResult
 from textual.widgets import ListView, Label
 
 from sk_aio.cli import SETTINGS
-from sk_aio.models import BasePlugin, PluginAction
+from sk_aio.api import Plugin, PluginAction
 from sk_aio.cli.widgets import GenericListItem
 
 class PluginListItemWidget(GenericListItem[PluginAction]):
@@ -14,7 +14,7 @@ class PluginSelector(ListView):
     """Plugin selector widget for the PluginSelect screen"""
 
     filters: dict[str, Any] = {}
-    plugins: List[BasePlugin] = []
+    plugins: List[Plugin] = []
 
     class Selected(ListView.Selected):
         """

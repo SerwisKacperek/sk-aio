@@ -1,11 +1,12 @@
 from typing import Any, TYPE_CHECKING
 
-from sk_aio.models import PluginAction, PluginActionArgument, PluginAPI
+from sk_aio.api import PluginAPI, PluginActionArgument
+from sk_aio.models import BasePluginAction
 
 if TYPE_CHECKING:
     from ..plugin import DebugPlugin
 
-class MultipleArgumentsActions(PluginAction):
+class MultipleArgumentsActions(BasePluginAction):
     def __init__(self, parent: 'DebugPlugin') -> None:
         super().__init__(
             name="multiple_arguments",

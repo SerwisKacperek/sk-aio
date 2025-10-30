@@ -5,7 +5,8 @@ import logging
 
 from bubus import EventBus
 
-from sk_aio.models import BasePlugin, PluginAction, PluginAPI
+from sk_aio.api import Plugin, PluginAction
+from sk_aio.models import BaseAPI
 
 class WorkerManager:
     bus: 'EventBus'
@@ -19,24 +20,24 @@ class WorkerManager:
     @overload
     def run_action(
         self,
-        plugin: BasePlugin,
+        plugin: Plugin,
         action: str,
     ) -> None: ...
 
     @overload
     def run_action(
         self,
-        plugin: BasePlugin,
+        plugin: Plugin,
         action: PluginAction,
     ) -> None: ...
 
     def run_action(
         self,
-        plugin: BasePlugin,
+        plugin: Plugin,
         action: str | PluginAction,
         **kwargs,
     ) -> None:
-        api = PluginAPI(
+        api = BaseAPI(
             self.bus,
             plugin.id
         )

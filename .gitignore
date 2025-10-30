@@ -10,4 +10,4 @@ sk_aio.egg-info/
 src/sk_aio/plugins/
 !src/sk_aio/plugins/__init__.py
 !src/sk_aio/plugins/debug_plugin/
-!src/sk_aio/plugins/file_plugin
+!src/sk_aio/plugins/file_plugin/

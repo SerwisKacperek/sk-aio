@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Optional, TypeVar
 import logging
 
+from sk_aio.api import PluginAPI
 from sk_aio.models.events import (
     PluginLogEvent,
     ActionProgressEvent,
@@ -13,8 +14,7 @@ if TYPE_CHECKING:
 
 T = TypeVar("T")
 
-class PluginAPI:
-
+class BaseAPI(PluginAPI):
     def __init__(
         self,
         event_bus: 'EventBus',

@@ -1,11 +1,12 @@
 from typing import TYPE_CHECKING
 
-from sk_aio.models import PluginAction, PluginAPI
+from sk_aio.api import PluginAPI
+from sk_aio.models import BasePluginAction
 
 if TYPE_CHECKING:
     from ..plugin import DebugPlugin
 
-class ErrorAction(PluginAction):
+class ErrorAction(BasePluginAction):
     def __init__(self, parent: 'DebugPlugin') -> None:
         super().__init__(
             name="error_action",

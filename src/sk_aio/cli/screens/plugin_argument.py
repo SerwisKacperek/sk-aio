@@ -7,7 +7,7 @@ from textual.widgets import Footer, Label
 from textual.binding import Binding
 from textual.containers import Vertical
 
-from sk_aio.models import PluginAction
+from sk_aio.api import PluginAction
 from sk_aio.cli.screens import AppHeader
 from sk_aio.cli.messages import SwitchToPluginSelectScreen, SwitchToPluginOutputScreen
 from sk_aio.cli.widgets import PluginArgumentInput

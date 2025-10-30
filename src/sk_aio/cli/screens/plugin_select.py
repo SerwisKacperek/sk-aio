@@ -6,7 +6,7 @@ from textual.app import ComposeResult
 from textual.reactive import Reactive, reactive
 from textual.widgets import Footer, Input
 
-from sk_aio.models import PluginAction
+from sk_aio.api import PluginAction
 from sk_aio.cli.screens import AppHeader, AppBody
 from sk_aio.cli.widgets import (
     PluginSearchBar,

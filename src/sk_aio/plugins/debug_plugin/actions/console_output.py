@@ -1,12 +1,13 @@
 from typing import TYPE_CHECKING
 import logging
 
-from sk_aio.models import PluginAction, PluginAPI
+from sk_aio.api import PluginAPI
+from sk_aio.models import BasePluginAction
 
 if TYPE_CHECKING:
     from ..plugin import DebugPlugin
 
-class ConsoleOutputAction(PluginAction):
+class ConsoleOutputAction(BasePluginAction):
     def __init__(self, parent: 'DebugPlugin') -> None:
         super().__init__(
             name="console_output",

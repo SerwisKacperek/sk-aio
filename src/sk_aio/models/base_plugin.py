@@ -1,22 +1,17 @@
-from dataclasses import dataclass
-from typing import Optional, List, Type, TypeVar, Any, Callable, overload, TYPE_CHECKING
+from typing import (
+    Type,
+    Any,
+    Callable,
+    Optional,
+    List,
+)
 
-if TYPE_CHECKING:
-    from sk_aio.models.plugin_api import PluginAPI
+from sk_aio.api import PluginAPI, Plugin, PluginAction, PluginActionArgument
 
-T = TypeVar("T")
+class BasePluginAction(PluginAction):
+    # TODO: Those also need to be object types
+    _dependencies: dict[str, str] = {}
 
-@dataclass
-class PluginActionArgument[T]:
-    name: str
-    required: bool
-    type: Type[T]
-    group: Optional[str] = None
-    description: Optional[str] = None
-    default_value: Optional[T] = None
-    value: Optional[T] = None
-
-class PluginAction:
     def __init__(
         self,
         name: str,
@@ -33,7 +28,7 @@ class PluginAction:
 
     async def execute(
         self,
-        api: 'PluginAPI',
+        api: PluginAPI,
         **kwargs,
     ) -> Any:
         for arg in self.args:
@@ -49,7 +44,7 @@ class PluginAction:
             api.complete()
             return result
 
-class BasePlugin:
+class BasePlugin(Plugin):
     id: str
     name: str
     actions: List[PluginAction]
@@ -62,20 +57,6 @@ class BasePlugin:
         self.id = id
         self.name = name
         self.actions = []
-
-    @overload
-    def register_action(
-        self,
-        name: str,
-        method: Callable[..., Any],
-        args: Optional[List[PluginAction]] = None,
-    ) -> PluginAction: ...
-
-    @overload
-    def register_action(
-        self,
-        action: PluginAction
-    ) -> PluginAction: ...
 
     def register_action(self, *args, **kwargs) -> PluginAction:
         if len(args) == 1 and isinstance(args[0], PluginAction):
@@ -102,3 +83,13 @@ class BasePlugin:
         return next((a for a in self.actions if a.name == name), None)
 
     def configure_action(self, action: PluginAction) -> PluginAction: ...
+
+# TODO: Those need to be class references
+def depends_on_action(plugin_name: str, action_name: str) -> Callable[[Type[PluginAction]], Type[PluginAction]]:
+    def decorator(cls: PluginAction) -> Type[PluginAction]:
+        if not hasattr(cls, '_dependencies'):
+            cls._dependencies = {}
+        cls._dependencies['plugin_name'] = action_name
+        
+        return cls
+    return decorator

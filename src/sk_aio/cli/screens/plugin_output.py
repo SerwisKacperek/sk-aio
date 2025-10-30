@@ -11,7 +11,7 @@ from textual.reactive import Reactive, reactive
 
 from sk_aio import logger
 from sk_aio.core.logging import BufferedHandler, CustomTextLogFormatter
-from sk_aio.models import PluginAction
+from sk_aio.api import PluginAction
 from sk_aio.cli import SETTINGS
 from sk_aio.cli.messages import SwitchToPluginSelectScreen, SwitchToActionArgumentsScreen
 from sk_aio.cli.screens import AppHeader

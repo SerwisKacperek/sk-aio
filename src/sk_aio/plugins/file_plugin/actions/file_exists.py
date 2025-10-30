@@ -1,12 +1,13 @@
 import os
 from typing import TYPE_CHECKING
 
-from sk_aio.models import PluginAction, PluginActionArgument, PluginAPI
+from sk_aio.api import PluginAPI, PluginActionArgument
+from sk_aio.models import BasePluginAction
 
 if TYPE_CHECKING:
     from ..plugin import FilePlugin
 
-class FileExistsAction(PluginAction):
+class FileExistsAction(BasePluginAction):
     def __init__(self, parent: 'FilePlugin'):
         super().__init__(
             name="check_file",

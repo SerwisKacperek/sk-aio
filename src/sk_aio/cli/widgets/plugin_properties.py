@@ -3,7 +3,7 @@ from textual.widget import Widget
 from textual.widgets import Static, Label
 from textual.containers import Vertical
 
-from sk_aio.models import PluginAction
+from sk_aio.api import PluginAction
 from sk_aio.cli.widgets import GenericListItem
 from sk_aio.cli.config import SETTINGS
 

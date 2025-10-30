@@ -1,7 +1,7 @@
 from textual import on
 from textual.widgets import Input
 
-from sk_aio.models.base_plugin import PluginActionArgument
+from sk_aio.api import PluginActionArgument
 
 class PluginArgumentInput(Input):
 

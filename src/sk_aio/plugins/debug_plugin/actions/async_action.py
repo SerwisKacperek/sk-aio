@@ -3,12 +3,13 @@ import logging
 import time
 import random
 
-from sk_aio.models import PluginAction, PluginAPI
+from sk_aio.api import PluginAPI
+from sk_aio.models import BasePluginAction
 
 if TYPE_CHECKING:
     from ..plugin import DebugPlugin
 
-class AsyncAction(PluginAction):
+class AsyncAction(BasePluginAction):
     def __init__(self, parent: 'DebugPlugin') -> None:
         super().__init__(
             name="async_action",
