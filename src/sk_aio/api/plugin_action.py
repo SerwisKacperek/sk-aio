@@ -7,7 +7,14 @@ if TYPE_CHECKING:
 
 @runtime_checkable
 class PluginAction(Protocol):
+    name: str
+    method: Callable[..., Any]
+    plugin: 'Plugin'
+    description: Optional[str]
+    args: list[PluginActionArgument[Any]]
+
     def __init__(
+        self,
         name: str,
         method: Callable[..., Any],
         plugin: 'Plugin',
@@ -16,6 +23,7 @@ class PluginAction(Protocol):
     ) -> None: ...
 
     async def execute(
+        self,
         api: PluginAPI,
         *args,
         **kwargs

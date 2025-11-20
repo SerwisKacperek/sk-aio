@@ -5,7 +5,8 @@ from sk_aio.plugins.debug_plugin.actions import (
     AsyncAction,
     MultipleArgumentsActions,
     ErrorAction,
-    DependencyAction
+    DependencyAction,
+    InProgressAction
 )
 
 class DebugPlugin(BasePlugin):
@@ -28,4 +29,7 @@ class DebugPlugin(BasePlugin):
         )
         self.register_action(
             DependencyAction(parent=self)
+        )
+        self.register_action(
+            InProgressAction(parent=self)
         )

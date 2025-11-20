@@ -8,11 +8,13 @@ if TYPE_CHECKING:
 
 class PluginAPI(Protocol):
     def __init__(
+        self,
         event_bus: 'EventBus',
         plugin_id: str
     ) -> None: ...
 
     def log(
+        self,
         message: str,
         level: int = logging.INFO
     ) -> None: ...
@@ -38,10 +40,12 @@ class PluginAPI(Protocol):
     ) -> None: ...
 
     def progress(
+        self,
         percent: float
     ) -> None: ...
 
     def complete(
+        self,
         result: Optional[T] = None
     ) -> Optional[T]: ...
 

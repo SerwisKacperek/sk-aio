@@ -24,11 +24,12 @@ class BasePluginAction(PluginAction):
         self.method = method
         self.plugin = plugin
         self.description = description
-        self.args = args or []
+        self.args = args or list()
 
     async def execute(
         self,
         api: PluginAPI,
+        *args,
         **kwargs,
     ) -> Any:
         for arg in self.args:
@@ -71,7 +72,7 @@ class BasePlugin(Plugin):
             if method is None:
                 raise ValueError("Method cannot be empty!")
 
-            action = PluginAction(name, method, plugin=self, args=action_args)
+            action = BasePluginAction(name, method, plugin=self, args=action_args)
 
         self.actions.append(action)
         return action
@@ -85,11 +86,19 @@ class BasePlugin(Plugin):
     def configure_action(self, action: PluginAction) -> PluginAction: ...
 
 # TODO: Those need to be class references
-def depends_on_action(plugin_name: str, action_name: str) -> Callable[[Type[PluginAction]], Type[PluginAction]]:
-    def decorator(cls: PluginAction) -> Type[PluginAction]:
+# def depends_on_action(plugin_name: str, action_name: str) -> Callable[[Type[PluginAction]], Type[PluginAction]]:
+#     def decorator(cls: PluginAction) -> Type[PluginAction]:
+#         if not hasattr(cls, '_dependencies'):
+#             cls.dependencies = {}
+#         cls.dependencies['plugin_name'] = action_name
+
+#         return cls
+#     return decorator
+
+def depends_on_action(plugin_cls: type, action_cls: type) -> Callable[[type], type]:
+    def decorator(cls: type) -> type:
         if not hasattr(cls, '_dependencies'):
-            cls._dependencies = {}
-        cls._dependencies['plugin_name'] = action_name
-        
+            cls._dependencies = []
+        cls._dependencies.append((plugin_cls, action_cls))
         return cls
     return decorator
