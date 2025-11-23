@@ -1,6 +1,6 @@
 [project]
 name = "sk_aio"
-version = "0.0.1"
+version = "0.1.0"
 description = "All-In-One tool collection from Serwis Kacperek"
 authors = [
     { name = "Kacper Baum-Azbum", email="kbaumazbum@gmail.com" }
