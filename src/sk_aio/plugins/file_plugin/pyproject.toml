@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name="file_plugin"
+description="Plugin for SK_AIO for handling file operations"
+version="0.1.0"
+
+[dependency-groups]
+external = [
+    "colorama==0.4.6",
+]
+plugins = [
+    "debug_plugin"
+]

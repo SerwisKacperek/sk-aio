@@ -20,7 +20,8 @@ class Plugin(Protocol):
     name: str
 
     deps: Set['DependencyGroupsDict'] = set()
-    plugin_deps: Set['DependencyGroupsDict'] = set()    
+    plugin_deps: Set['DependencyGroupsDict'] = set()
+    active: bool = False
 
     def __init__(
         self,

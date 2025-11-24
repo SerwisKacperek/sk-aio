@@ -4,70 +4,125 @@ import importlib.util
 import logging
 
 import pyproject_parser as ppp
+from dom_toml.parser import BadConfigError
+import networkx as nx
 
 from sk_aio.api import Plugin
 from sk_aio.models import BasePlugin
 
 class PluginLoader:
     blacklisted_paths: List[str] = [
-        "__pycache__"
+        "__pycache__",
+        "__init__.py",
     ]
 
     def __init__(
-        self
+        self,
     ) -> None:
-        self._loaded_plugins: Set[Plugin] = []
-
-    # TODO: Implement a loader method to load plugins from `plugins/` directory
-    # TODO: Implement a loader method to load plugins using entry points from installed packages
+        self._lodaed_plugins: Set[Plugin] = set()
 
     def _load_pyproject(
         self,
         path: Path,
-    ) -> ppp.PyProject:
-        # TODO: PyProjectDeprecationWarning
-
+    ) -> ppp.PyProject | None:
         if path.is_dir():
-            path = path / 'pyproject.toml'
+            path = path / "pyproject.toml"
 
-        project = ppp.PyProject.load(path) 
+        try:
+            project = ppp.PyProject.load(path)
+        except BadConfigError:
+            logging.getLogger(__name__).error("Failed to load pyproject.toml from %s", path)
+            return None
 
         return project
-    
+
+    def _load_plugin_configs(
+        self,
+        plugin_root_path: Path,
+    ) -> List[tuple[Path, ppp.PyProject]]:
+        plugin_configs: List[tuple[Path, ppp.PyProject]] = []
+
+        for file in plugin_root_path.iterdir():
+            if file.name in self.blacklisted_paths:
+                continue
+            pyproject: ppp.PyProject | None = None
+
+            # Load plugin as a package
+            if file.is_dir():
+                if (file / "pyproject.toml").exists():
+                    pyproject = self._load_pyproject(file)
+                else:
+                    logging.getLogger(__name__).warning("'%s/pyproject.toml' was not found!", file)
+
+            if pyproject is not None and pyproject.project is not None:
+                plugin_configs.append((file, pyproject))
+            else:
+                logging.getLogger(__name__).warning("Could not load plugin config for '%s'", file)
+
+        return plugin_configs
+
+    def _sort_load_order(
+        self,
+        plugin_configs: List[tuple[Path, ppp.PyProject]]
+    ) -> List[tuple[Path, ppp.PyProject]]:
+        g = nx.DiGraph()
+        name_to_plugin: dict[str, tuple[Path, ppp.PyProject]] = {}
+
+        for plugin in plugin_configs:
+            if plugin[1].project is None or plugin[1].project["name"] is None:
+                logging.getLogger(__name__).warning("Plugin at '%s' not loaded due to missing or invalid pyproject.", plugin[0])
+                continue
+
+            name_to_plugin[plugin[1].project["name"]] = plugin
+
+        for plugin in plugin_configs:
+            if plugin[1].project is None or plugin[1].project["name"] is None:
+                continue
+
+            g.add_node(plugin[1].project["name"])
+
+            # If no plugin dependencies, continue
+            dependencies = plugin[1].project.get("dependencies")
+            plugin_deps = dependencies.get("plugins") if isinstance(dependencies, dict) else None
+            if not dependencies or not plugin_deps:
+                continue
+
+            for dep in plugin_deps:
+                g.add_edge(plugin[1].project["name"], dep)
+
+        while not nx.is_directed_acyclic_graph(g):
+            try:
+                cycle = nx.find_cycle(g)
+                plugin_to_remove = cycle[0][0]
+                logging.error("Circular plugin dependency detected! Removing plugin: %s", plugin_to_remove)
+
+                g.remove_node(plugin_to_remove)
+                if plugin_to_remove in name_to_plugin:
+                    del name_to_plugin[plugin_to_remove]
+            except nx.NetworkXNoCycle:
+                break
+
+        sorted_names = list(nx.topological_sort(g))
+        return [name_to_plugin[name] for name in sorted_names if name in name_to_plugin]
+
     def _load_plugin_from_package(
         self,
-        path: Path,
+        package_path: Path,
     ) -> Plugin | None:
-        """
-        Loads a plugin from the specified package directory.
-        Args:
-            path (Path): The path to the package directory containing the plugin.
-        Returns:
-            tuple:
-                - Plugin: The loaded plugin instance.
-                - Set[ppp.DependencyGroupsDict]: A set of dependency groups required by the plugin.
-                - Set[ppp.DependencyGroupsDict]: A set of plugin dependency groups required by the plugin.
-        Raises:
-            ValueError: If the provided path is not a directory.
-        """
-        if not path.is_dir():
-            logging.getLogger(__name__).warning(f"Provided path '{path}' is not a directory.")
+        if not package_path.is_dir():
+            logging.getLogger(__name__).warning("Provided path '%s' is not a directory.", str(package_path))
             return None
-        
-        plugin_instance: Plugin = None
-        pyproject: ppp.PyProject = None
 
-        # load plugin metadata
-        if (path / "pyproject.toml").exists():
-            pyproject = self._load_pyproject(path)
-        else:
-            logging.getLogger(__name__).warning("'%s/pyproject.toml' was not found!", path)
+        plugin_instance: Plugin | None = None
+
+        plugin_instance: Plugin | None = None
+
         # try to load the plugin itself
-        plugin_file = path / "plugin.py"
+        plugin_file = package_path / "plugin.py"
         if not plugin_file.exists():
             return None
 
-        module_name = f"{path.name}"
+        module_name = f"{package_path.name}"
         spec = importlib.util.spec_from_file_location(module_name, plugin_file)
         if spec is None or spec.loader is None:
             return None
@@ -80,55 +135,46 @@ class PluginLoader:
             attr = getattr(module, attr_name)
             if isinstance(attr, type) and issubclass(attr, BasePlugin) and attr is not Plugin:
                 plugin_instance = attr()
-                
-        if pyproject and pyproject.dependency_groups:
-            if 'external' in pyproject.dependency_groups:
-                plugin_instance.deps = pyproject.dependency_groups['external']
-            if 'plugins' in pyproject.dependency_groups:
-                plugin_instance.plugin_deps = pyproject.dependency_groups['plugins']
+
+        if not plugin_instance:
+            return None
 
         return plugin_instance
 
-    def load_files(
+    def _load_plugins(
         self,
-        plugin_root_path: Path
+        plugin_configs: List[tuple[Path, ppp.PyProject]],
     ) -> Set[Plugin]:
         plugins: Set[Plugin] = set()
 
-        # TODO: Install dependencies using pip
-        # TODO: Add dep's starting with sk_aio to a collection
+        for config in plugin_configs:
+            plugin_instance: Plugin | None = None
 
-        for file in plugin_root_path.iterdir():
-            # TODO: Implement loading from different structures
+            if config[0].is_dir():
+                plugin_instance = self._load_plugin_from_package(config[0])
 
-            if file.name in self.blacklisted_paths:
+            if plugin_instance is None:
                 continue
-
-            else:
-                if file.is_dir():
-                    p = self._load_plugin_from_package(file)
-                    plugins.add(p)
-
-        # TODO: Install deps
+            plugins.add(plugin_instance)
 
         return plugins
 
     def load_plugins(
         self,
-        plugin_root_path: Path
+        plugin_root_path: Path,
     ) -> Set[Plugin]:
-        plugins: Set[Plugin] = []
 
-        plugins += self.load_files(plugin_root_path)
-        plugins = [plugin for plugin in plugins if plugin is not None]
+        configs = self._load_plugin_configs(plugin_root_path)
+        configs = self._sort_load_order(configs)
 
-        self._loaded_plugins = plugins
-        return plugins
+        self._lodaed_plugins = self._load_plugins(configs)
+
+        return self.loaded_plugins
 
     @property
     def loaded_plugins(self) -> Set[Plugin]:
-        return self._loaded_plugins
+        return self._lodaed_plugins
 
     @property
     def loaded_plugin_count(self) -> int:
-        return len(self._loaded_plugins)
+        return len(self._lodaed_plugins)
