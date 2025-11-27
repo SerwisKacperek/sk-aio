@@ -35,10 +35,10 @@ buffered_handler.setFormatter(formatter)
 logging.basicConfig(
     level="NOTSET",
     handlers=[
-        TextualHandler(),
+        # Disabled for now - causes logging to sys.stdout when no textual app instance found
+        #TextualHandler(),
     ],
 )
-
 logger = logging.getLogger(None)
 logger.addHandler(file_handler)
 logger.addHandler(buffered_handler)

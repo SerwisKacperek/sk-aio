@@ -1,7 +1,10 @@
 from typing import List, Set
 from pathlib import Path
 import importlib.util
+from importlib.metadata import distributions
 import logging
+import subprocess
+import sys
 
 import pyproject_parser as ppp
 from dom_toml.parser import BadConfigError
@@ -159,6 +162,37 @@ class PluginLoader:
 
         return plugins
 
+    @staticmethod
+    def resolve_dependencies(
+        config: tuple[Path, ppp.PyProject],
+    ) -> None:
+        if config[1].dependency_groups is None or config[1].dependency_groups['external'] is None:
+            return # no external dependencies to install
+
+        # Ignore DependencyGroupDict objects for now
+        already_installed_packages = {dist.metadata['Name'].lower() for dist in distributions() if 'Name' in dist.metadata}
+        external_packages = [
+            pkg for pkg in config[1].dependency_groups['external']
+            if isinstance(pkg, str) and pkg.lower().split('==')[0] not in already_installed_packages
+        ]
+
+        if len(external_packages) == 0:
+            return
+        logging.getLogger(__name__).debug(
+            "Installing \"%s\" for %s plugin",
+            " ".join(external_packages),
+            config[1].project['name']
+        )
+
+        (status, output) = subprocess.getstatusoutput(
+            [sys.executable, "-m", "pip", "install"] + external_packages
+        )
+        if status != 0:
+            raise RuntimeError(output)
+        logging.getLogger(__name__).debug(output)
+
+        return
+
     def load_plugins(
         self,
         plugin_root_path: Path,
@@ -166,6 +200,17 @@ class PluginLoader:
 
         configs = self._load_plugin_configs(plugin_root_path)
         configs = self._sort_load_order(configs)
+
+        # TODO: Add a setting to auto install dependencies or skip loading those plugins
+        for config in configs:
+            try:
+                PluginLoader.resolve_dependencies(config)
+            except RuntimeError as error:
+                logging.getLogger(__name__).error(
+                    "Error occured while trying to install dependencies for \"%s\" plugin: %s", 
+                    config[1].project['name'],
+                    error
+                )
 
         self._lodaed_plugins = self._load_plugins(configs)
 
