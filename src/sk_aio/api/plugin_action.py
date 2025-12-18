@@ -7,11 +7,14 @@ if TYPE_CHECKING:
 
 @runtime_checkable
 class PluginAction(Protocol):
+    # TODO: Find a way to type this without defining as ClassVars
     name: str
     method: Callable[..., Any]
     plugin: 'Plugin'
     description: Optional[str]
     args: list[PluginActionArgument[Any]]
+
+    dependencies: dict[str, set]
 
     def __init__(
         self,

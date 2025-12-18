@@ -1,5 +1,6 @@
 from typing import (
     Type,
+    TypeVar,
     Any,
     Callable,
     Optional,
@@ -8,9 +9,16 @@ from typing import (
 
 from sk_aio.api import PluginAPI, Plugin, PluginAction, PluginActionArgument
 
+T = TypeVar("T", bound=PluginAction)
+
 class BasePluginAction(PluginAction):
-    # TODO: Those also need to be object types
-    _dependencies: dict[str, str] = {}
+    name: str
+    method: Callable[..., Any]
+    plugin: 'Plugin'
+    description: Optional[str]
+    args: list[PluginActionArgument[Any]]
+
+    dependencies: dict[str, set] = {}
 
     def __init__(
         self,
@@ -48,7 +56,7 @@ class BasePluginAction(PluginAction):
 class BasePlugin(Plugin):
     id: str
     name: str
-    actions: List[PluginAction]
+    actions: List[PluginAction] = list()
 
     def __init__(
         self,
@@ -81,24 +89,16 @@ class BasePlugin(Plugin):
         self,
         name: str
     ) -> Optional[PluginAction]:
-        return next((a for a in self.actions if a.name == name), None)
+        return next((a for a in self.actions if getattr(a, 'name', None) == name), None)
 
     def configure_action(self, action: PluginAction) -> PluginAction: ...
 
-# TODO: Those need to be class references
-# def depends_on_action(plugin_name: str, action_name: str) -> Callable[[Type[PluginAction]], Type[PluginAction]]:
-#     def decorator(cls: PluginAction) -> Type[PluginAction]:
-#         if not hasattr(cls, '_dependencies'):
-#             cls.dependencies = {}
-#         cls.dependencies['plugin_name'] = action_name
-
-#         return cls
-#     return decorator
-
-def depends_on_action(plugin_cls: type, action_cls: type) -> Callable[[type], type]:
-    def decorator(cls: type) -> type:
-        if not hasattr(cls, '_dependencies'):
-            cls._dependencies = []
-        cls._dependencies.append((plugin_cls, action_cls))
+def depends_on_action(plugin_name: str, action_name: str) -> Callable[[T], T]:
+    def decorator(cls: T) -> T:
+        if 'dependencies' not in cls.__dict__:
+            cls.dependencies = {}
+        if plugin_name not in cls.dependencies:
+            cls.dependencies[plugin_name] = set()
+        cls.dependencies[plugin_name].add(action_name)
         return cls
     return decorator

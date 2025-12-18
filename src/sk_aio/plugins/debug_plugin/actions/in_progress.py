@@ -3,11 +3,12 @@ from typing import TYPE_CHECKING
 import pyproject_parser as ppp
 
 from sk_aio.api import PluginAPI
-from sk_aio.models import BasePluginAction
+from sk_aio.models import BasePluginAction, depends_on_action
 
 if TYPE_CHECKING:
     from ..plugin import DebugPlugin
 
+@depends_on_action('file_plugin', 'list_dir')
 class InProgressAction(BasePluginAction):
     def __init__(
         self,
@@ -28,5 +29,7 @@ class InProgressAction(BasePluginAction):
         path = 'D:\programowanie\SerwisKacperek\sk-aio\src\sk_aio\plugins\debug_plugin\pyproject.toml'
         project = ppp.PyProject.load(path)
         api.info(project.to_dict())
+        api.info(self.dependencies)
+        api.info(self.plugin._action_deps)
 
         return

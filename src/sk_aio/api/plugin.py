@@ -23,6 +23,8 @@ class Plugin(Protocol):
     plugin_deps: Set['DependencyGroupsDict'] = set()
     active: bool = False
 
+    _action_deps: dict[str, Set[str]] = dict()
+
     def __init__(
         self,
         id: str = "",
