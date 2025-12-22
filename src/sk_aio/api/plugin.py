@@ -3,6 +3,7 @@ from typing import (
     Callable,
     Any,
     Optional,
+    List,
     Set,
     overload,
     runtime_checkable,
@@ -18,6 +19,7 @@ if TYPE_CHECKING:
 class Plugin(Protocol):
     id: str
     name: str
+    actions: List[PluginAction] = list()
 
     deps: Set['DependencyGroupsDict'] = set()
     plugin_deps: Set['DependencyGroupsDict'] = set()

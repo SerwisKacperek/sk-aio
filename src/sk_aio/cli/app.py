@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 from rich.console import RenderableType
 
@@ -15,6 +15,9 @@ from sk_aio.cli.screens import (
 )
 from sk_aio.cli.messages import *
 from sk_aio.models.events import *
+
+if TYPE_CHECKING:
+    from sk_aio.core import AppContext
 
 class AllInOne(App[None]):
     ALLOW_SELECT = False
@@ -33,16 +36,24 @@ class AllInOne(App[None]):
         ),
     ]
 
+    _app_context: 'AppContext'
+
     def __init__(
         self,
         settings: Settings,
+        context: 'AppContext',
     ) -> None:
         SETTINGS.set(settings)
 
         self.settings = settings
+        self._app_context = context
         self.current_screen = None
 
         super().__init__()
+
+    @property
+    def context(self):
+        return self._app_context
 
     def get_default_screen(self) -> Screen:
         self.current_screen = PluginSelectScreen()
@@ -104,7 +115,7 @@ class AllInOne(App[None]):
 # region Actions
     async def action_quit(self) -> None:
         """Action to quit the application."""
-        bus = SETTINGS.get().event_bus
+        bus = self.context.event_bus
         await bus.stop()
 
         self.exit()

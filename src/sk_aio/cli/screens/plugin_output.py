@@ -6,13 +6,12 @@ from textual import on
 from textual.app import ComposeResult
 from textual.screen import Screen
 from textual.binding import Binding
-from textual.widgets import Footer, TabbedContent, TabPane, Log 
+from textual.widgets import Footer, TabbedContent, TabPane, Log
 from textual.reactive import Reactive, reactive
 
 from sk_aio import logger
 from sk_aio.core.logging import BufferedHandler, CustomTextLogFormatter
 from sk_aio.api import PluginAction
-from sk_aio.cli import SETTINGS
 from sk_aio.cli.messages import SwitchToPluginSelectScreen, SwitchToActionArgumentsScreen
 from sk_aio.cli.screens import AppHeader
 from sk_aio.cli.widgets import PluginOutputArea
@@ -54,8 +53,7 @@ class PluginOutputScreen(Screen[Any]):
         self.action: PluginAction = action
 
     async def start_action(self) -> None:
-        worker_manager = SETTINGS.get().worker_manager
-        worker_manager.run_action(self.action.plugin, self.action)
+        self.all_in_one_app.context.worker_manager.run_action(self.action.plugin, self.action)
 
     def on_mount(self) -> None:
         handlers: List[BufferedHandler] = list(filter(lambda h: isinstance(h, BufferedHandler), logger.handlers)) # type: ignore

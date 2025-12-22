@@ -1,4 +1,4 @@
-from typing import List, Set
+from typing import List, Set, overload
 from pathlib import Path
 import importlib.util
 from importlib.metadata import distributions
@@ -22,7 +22,7 @@ class PluginLoader:
     def __init__(
         self,
     ) -> None:
-        self._lodaed_plugins: Set[Plugin] = set()
+        self._loaded_plugins: Set[Plugin] = set()
 
     @staticmethod
     def resolve_dependencies(
@@ -79,17 +79,34 @@ class PluginLoader:
         for name in sys.modules:
             if "sk_aio.plugins." in name:
                 if name.find('.actions') == -1:
-                    result.add(name)
+                    result.add(name.split(".")[-1])
 
         return result
 
     @property
-    def loaded_plugins(self) -> Set[Plugin]:
-        return self._lodaed_plugins
+    def loaded_plugin_count(self) -> int:
+        return len(self._loaded_plugins)
 
     @property
-    def loaded_plugin_count(self) -> int:
-        return len(self._lodaed_plugins)
+    def loaded_plugins(self) -> Set[Plugin]:
+        return self._loaded_plugins
+
+    def get_active_plugin(self, plugin: str) -> Plugin | None:
+        _loaded = PluginLoader.get_active_plugins()
+
+        if plugin not in _loaded:
+            return None
+
+        for p in self.loaded_plugins:
+            if p.id == plugin:
+                return p
+
+        # Something went wrong
+        logging.getLogger(__name__).warning(
+            "Plugin '%s' is in 'active_plugins' but couldn't be found in 'loaded_plugins'", 
+            plugin
+        )
+        return None
 
     def load_plugins(
         self,
@@ -111,7 +128,7 @@ class PluginLoader:
                     error
                 )
 
-        self._lodaed_plugins = self._load_plugins(configs)
+        self._loaded_plugins = self._load_plugins(configs)
 
         return self.loaded_plugins
 

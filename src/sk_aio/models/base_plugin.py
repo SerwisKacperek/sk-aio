@@ -1,5 +1,4 @@
 from typing import (
-    Type,
     TypeVar,
     Any,
     Callable,
@@ -56,7 +55,6 @@ class BasePluginAction(PluginAction):
 class BasePlugin(Plugin):
     id: str
     name: str
-    actions: List[PluginAction] = list()
 
     def __init__(
         self,

@@ -29,10 +29,6 @@ class Settings(BaseSettings):
         env_ignore_empty=True,
         extra="allow",
     )
-    event_bus: EventBus = MagicMock(spec=EventBus)
-    worker_manager: WorkerManager = MagicMock(spec=WorkerManager)
-    plugin_loader: PluginLoader = MagicMock(spec=PluginLoader)
-
     heading: HeadingSettings = Field(default_factory=HeadingSettings)
     plugin_properties: PluginPropertiesSettings = Field(default_factory=PluginPropertiesSettings)
 

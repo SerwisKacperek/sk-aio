@@ -10,6 +10,7 @@ from bubus import EventBus
 from sk_aio.cli import AllInOne, Settings
 from sk_aio.cli.events import register_events
 from sk_aio.core import WorkerManager, PluginLoader
+from sk_aio.core.context import AppContext
 
 @click.group(cls=DefaultGroup, default="default", default_if_no_args=True)
 def cli():
@@ -19,15 +20,17 @@ def cli():
 def default(
     env: tuple[str, ...] = (),
 ) -> None:
-    event_bus = EventBus()
-    manager = WorkerManager(event_bus=event_bus)
+    context = AppContext(
+        worker_manager=WorkerManager(),
+        plugin_loader=PluginLoader(),
+        event_bus=EventBus(),
+    )
 
-    app = make_app(event_bus, manager, env)
+    app = make_app(context, env)
     app.run()
 
 def make_app(
-    event_bus: EventBus,
-    worker_manager: WorkerManager,
+    context: AppContext,
     env: tuple[str, ...] = (),
 ) -> AllInOne:
     """Return a SK-AIO instance."""
@@ -37,16 +40,14 @@ def make_app(
 
     env_paths = (Path(e).resolve() for e in env)
     settings = Settings(_env_file=env_paths) # type: ignore[call-arg]
-    settings.event_bus = event_bus
-    settings.worker_manager = worker_manager
 
-    plugin_loader = PluginLoader()
     plugins_path = Path(__file__).parent / "plugins"
-    plugin_loader.load_plugins(plugins_path)
-    settings.plugin_loader = plugin_loader
+    context.plugin_loader.load_plugins(plugins_path)
 
-    app = AllInOne(settings)
-    register_events(app, event_bus)
+    context.worker_manager.context = context
+
+    app = AllInOne(settings, context=context)
+    register_events(app, context.event_bus)
 
     return app
 

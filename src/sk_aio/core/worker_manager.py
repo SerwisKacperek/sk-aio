@@ -1,21 +1,37 @@
-from typing import overload
+from typing import overload, TYPE_CHECKING
 import asyncio
 import threading
 import logging
 
-from bubus import EventBus
-
 from sk_aio.api import Plugin, PluginAction
 from sk_aio.models import BaseAPI
 
-class WorkerManager:
-    bus: 'EventBus'
+if TYPE_CHECKING:
+    from sk_aio.core import AppContext
 
-    def __init__(
+class WorkerManager:
+    context: 'AppContext'
+
+    def get_dependencies(
         self,
-        event_bus: 'EventBus',
-    ) -> None:
-        self.bus = event_bus
+        action: PluginAction
+    ) -> dict[str, PluginAction | None]:
+        loader_instance = self.context.plugin_loader
+        actions: dict[str, PluginAction | None] = {}
+
+        if loader_instance is None:
+            raise RuntimeError("Plugin loader instance is missing in SETTINGS.")
+
+        for dep in action.dependencies.keys():
+            pi = loader_instance.get_active_plugin(dep)
+
+            if pi is None:
+                continue
+
+            for act in action.dependencies[dep]:
+                actions[act] = pi.get_action(act)
+
+        return actions
 
     @overload
     def run_action(
@@ -38,7 +54,7 @@ class WorkerManager:
         **kwargs,
     ) -> None:
         api = BaseAPI(
-            self.bus,
+            self.context.event_bus,
             plugin.id
         )
         if isinstance(action, PluginAction):
@@ -53,9 +69,15 @@ class WorkerManager:
             api.current_action = plugin_action.name
             action = plugin_action
 
+        deps = self.get_dependencies(action)
+
+        # Add standard arguments
         method_args = {}
         for arg in action.args:
             method_args[arg.name] = getattr(arg, "value", None) if getattr(arg, "value", None) is not None else getattr(arg, "default_value", None)
+
+        # Add dependencies to method_args
+        method_args = {**method_args, **deps}
 
         async def run_sync():
             logging.getLogger(__name__).debug("Starting sync action '%s' ...", action.name)

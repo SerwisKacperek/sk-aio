@@ -6,7 +6,7 @@ class FilePlugin(BasePlugin):
     def __init__(
         self
     ) -> None:
-        super().__init__(id="file", name="File Operations")
+        super().__init__(id="file_plugin", name="File Operations")
 
         self.register_action(
             ListDirAction(parent=self)

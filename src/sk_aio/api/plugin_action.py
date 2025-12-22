@@ -1,9 +1,11 @@
-from typing import Protocol, Callable, Any, Optional, TYPE_CHECKING, runtime_checkable
+from typing import Protocol, Callable, Any, Optional, TypeVar, TYPE_CHECKING, runtime_checkable
 
 from sk_aio.api import PluginActionArgument, PluginAPI
 
 if TYPE_CHECKING:
     from sk_aio.api import Plugin
+
+T = TypeVar("T")
 
 @runtime_checkable
 class PluginAction(Protocol):
@@ -14,7 +16,7 @@ class PluginAction(Protocol):
     description: Optional[str]
     args: list[PluginActionArgument[Any]]
 
-    dependencies: dict[str, set]
+    dependencies: dict[str, set[str]]
 
     def __init__(
         self,
@@ -24,6 +26,10 @@ class PluginAction(Protocol):
         description: Optional[str] = None,
         args: Optional[list[PluginActionArgument[Any]]] = None,
     ) -> None: ...
+
+    @staticmethod
+    def get_dependency(obj) -> Optional[T]:
+        pass
 
     async def execute(
         self,
