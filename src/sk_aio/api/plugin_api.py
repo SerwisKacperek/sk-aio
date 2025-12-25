@@ -5,13 +5,28 @@ T = TypeVar("T")
 
 if TYPE_CHECKING:
     from bubus import EventBus
+    from sk_aio.api import PluginAction
+    from sk_aio.core import AppContext
 
 class PluginAPI(Protocol):
+    _context: 'AppContext'
+    _bus: 'EventBus'
+    _plugin_id: str
+    _current_action: Optional[str] = None
+
     def __init__(
         self,
-        event_bus: 'EventBus',
+        context: 'AppContext',
         plugin_id: str
     ) -> None: ...
+
+    @property
+    def current_action(self) -> Optional[str]: ...
+
+    @property
+    def plugin_id(self) -> str: ...
+
+    def execute(self, action: 'PluginAction'): ...
 
     def log(
         self,
@@ -48,9 +63,3 @@ class PluginAPI(Protocol):
         self,
         result: Optional[T] = None
     ) -> Optional[T]: ...
-
-    @property
-    def current_action(self) -> Optional[str]: ...
-
-    @property
-    def plugin_id(self) -> str: ...

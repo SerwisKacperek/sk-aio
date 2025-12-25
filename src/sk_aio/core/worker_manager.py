@@ -54,7 +54,7 @@ class WorkerManager:
         **kwargs,
     ) -> None:
         api = BaseAPI(
-            self.context.event_bus,
+            self.context,
             plugin.id
         )
         if isinstance(action, PluginAction):

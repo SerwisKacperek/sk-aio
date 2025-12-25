@@ -1,12 +1,11 @@
-from typing import TYPE_CHECKING
-
-import pyproject_parser as ppp
+from typing import Optional, TYPE_CHECKING
 
 from sk_aio.api import PluginAPI
 from sk_aio.models import BasePluginAction, depends_on_action
 
 if TYPE_CHECKING:
     from ..plugin import DebugPlugin
+    from sk_aio.plugins.file_plugin.actions import ListDirAction
 
 @depends_on_action('file_plugin', 'list_dir')  # type: ignore[reportArgumentType]
 class InProgressAction(BasePluginAction):
@@ -25,24 +24,17 @@ class InProgressAction(BasePluginAction):
     async def run(
         self,
         api: PluginAPI,
+        list_dir: Optional['ListDirAction'] = None,
         *args,
         **kwargs
     ) -> None:
-        path = 'D:\programowanie\SerwisKacperek\sk-aio\src\sk_aio\plugins\debug_plugin\pyproject.toml'
-        project = ppp.PyProject.load(path)
 
-        api.info(project.to_dict())
-        api.info(self.dependencies)
-        api.info(self.plugin._action_deps)
+        if list_dir is None:
+            api.info("list_dir argument is None!")
+            return
 
-        print(kwargs)
-
-        if "list_dir" in kwargs:
-            api.info("list_dir found in kwargs!")
-            api.info(kwargs["list_dir"])
-            kwargs["list_dir"]()
-            api.complete()
-        else:
-            api.info("list_dir NOT found in kwargs!")
+        api.info("list_dir argument present!")
+        result = await list_dir.run(api, "D:/")
+        api.log("Done")
 
         return

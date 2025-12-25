@@ -10,45 +10,39 @@ from sk_aio.models.events import (
 )
 
 if TYPE_CHECKING:
-    from bubus import EventBus
+    from sk_aio.api import PluginAction
+    from sk_aio.core import AppContext
 
 T = TypeVar("T")
 
 class BaseAPI(PluginAPI):
     def __init__(
         self,
-        event_bus: 'EventBus',
+        context: 'AppContext',
         plugin_id: str,
     ) -> None:
-        self._bus = event_bus
+        self._context = context
+        self._bus = context.event_bus
         self._plugin_id = plugin_id
         self._current_action: Optional[str] = None
 
         # Extra logging data
         self._logger = logging.Logger(self._plugin_id)
 
-    def _create_log_record(
-        self,
-        message: str,
-        level: int = logging.INFO
-    ) -> logging.LogRecord:
-        filename, line_numer, function_name, _ = self._logger.findCaller(stack_info=False)
+    @property
+    def current_action(self) -> Optional[str]:
+        return self._current_action
 
-        _log_record = logging.LogRecord(
-            name=f"{self.plugin_id}.{self.current_action}",
-            level=level,
-            pathname=filename,
-            lineno=line_numer,
-            args=(),
-            msg=message,
-            exc_info=None,
-            func=function_name,
-            sinfo=None,
-        )
-        _log_record.__dict__["plugin"] = self.plugin_id
-        _log_record.__dict__["action"] = self.current_action
+    @current_action.setter
+    def current_action(self, name: Optional[str]) -> None:
+        self._current_action = name
 
-        return _log_record
+    @property
+    def plugin_id(self) -> str:
+        return self._plugin_id
+
+    def execute(self, action: 'PluginAction'):
+        pass
 
     def log(
         self,
@@ -120,14 +114,25 @@ class BaseAPI(PluginAPI):
         self.current_action = None
         self.log("Task complete!")
 
-    @property
-    def current_action(self) -> Optional[str]:
-        return self._current_action
+    def _create_log_record(
+        self,
+        message: str,
+        level: int = logging.INFO
+    ) -> logging.LogRecord:
+        filename, line_numer, function_name, _ = self._logger.findCaller(stack_info=False)
 
-    @current_action.setter
-    def current_action(self, name: Optional[str]) -> None:
-        self._current_action = name
+        _log_record = logging.LogRecord(
+            name=f"{self.plugin_id}.{self.current_action}",
+            level=level,
+            pathname=filename,
+            lineno=line_numer,
+            args=(),
+            msg=message,
+            exc_info=None,
+            func=function_name,
+            sinfo=None,
+        )
+        _log_record.__dict__["plugin"] = self.plugin_id
+        _log_record.__dict__["action"] = self.current_action
 
-    @property
-    def plugin_id(self) -> str:
-        return self._plugin_id
+        return _log_record
