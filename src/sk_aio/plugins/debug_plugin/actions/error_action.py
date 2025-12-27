@@ -7,12 +7,12 @@ if TYPE_CHECKING:
     from ..plugin import DebugPlugin
 
 class ErrorAction(BasePluginAction):
-    def __init__(self, parent: 'DebugPlugin') -> None:
+    def __init__(self, plugin: 'DebugPlugin') -> None:
         super().__init__(
             name="error_action",
             description="Triggers an error during the action's runtime",
             method=self.run,
-            plugin=parent,
+            plugin=plugin,
             args=None
         )
 

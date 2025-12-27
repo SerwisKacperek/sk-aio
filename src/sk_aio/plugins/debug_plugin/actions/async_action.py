@@ -10,12 +10,12 @@ if TYPE_CHECKING:
     from ..plugin import DebugPlugin
 
 class AsyncAction(BasePluginAction):
-    def __init__(self, parent: 'DebugPlugin') -> None:
+    def __init__(self, plugin: 'DebugPlugin') -> None:
         super().__init__(
             name="async_action",
             description="Sleep for a random amount of time.",
             method=self.run,
-            plugin=parent,
+            plugin=plugin,
             args=None
         )
 

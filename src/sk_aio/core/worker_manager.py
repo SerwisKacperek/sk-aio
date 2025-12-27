@@ -20,7 +20,7 @@ class WorkerManager:
         actions: dict[str, PluginAction | None] = {}
 
         if loader_instance is None:
-            raise RuntimeError("Plugin loader instance is missing in SETTINGS.")
+            raise RuntimeError("Plugin loader instance is missing!")
 
         for dep in action.dependencies.keys():
             pi = loader_instance.get_active_plugin(dep)

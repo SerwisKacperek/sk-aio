@@ -8,12 +8,12 @@ if TYPE_CHECKING:
     from ..plugin import FilePlugin
 
 class FileExistsAction(BasePluginAction):
-    def __init__(self, parent: 'FilePlugin'):
+    def __init__(self, plugin: 'FilePlugin'):
         super().__init__(
             name="check_file",
             description="Checks if a file with a given directory exists",
             method=self.run,
-            plugin=parent,
+            plugin=plugin,
             args=[
             PluginActionArgument(
                 name="path",

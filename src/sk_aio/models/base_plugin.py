@@ -8,30 +8,41 @@ from typing import (
 
 from sk_aio.api import PluginAPI, Plugin, PluginAction, PluginActionArgument
 
-T = TypeVar("T", bound=PluginAction)
+
+T = TypeVar("T", bound='PluginAction')
 
 class BasePluginAction(PluginAction):
-    name: str
-    method: Callable[..., Any]
-    plugin: 'Plugin'
-    description: Optional[str]
-    args: list[PluginActionArgument[Any]]
-
-    dependencies: dict[str, set] = {}
+    _method: Callable[..., Any] = lambda *args, **kwargs: None
+    _plugin: 'Plugin'
+    _args: list[PluginActionArgument[Any]] = []
+    dependencies: dict[str, set[str]] = {}
 
     def __init__(
         self,
+        plugin: "BasePlugin",
         name: str,
         method: Callable[..., Any],
-        plugin: "BasePlugin",
         description: Optional[str] = None,
         args: Optional[List[PluginActionArgument[Any]]] = None,
     ) -> None:
         self.name = name
-        self.method = method
-        self.plugin = plugin
         self.description = description
-        self.args = args or list()
+
+        self._method = method
+        self._plugin = plugin
+        self._args = args or list()
+
+    @property
+    def method(self) -> Callable[..., Any]:
+        return self._method
+
+    @property
+    def plugin(self) -> 'Plugin':
+        return self._plugin
+
+    @property
+    def args(self) -> list[PluginActionArgument[Any]]:
+        return self._args
 
     async def execute(
         self,
@@ -44,7 +55,8 @@ class BasePluginAction(PluginAction):
                 raise ValueError(f"Missing required argument: {arg.name}")
 
         try:
-            result = await self.method(api, **kwargs)
+            mth = self.method
+            result = await mth(api, **kwargs)
         except Exception as e:
             api.error(f"An error occured when running the action...\n{e}")
             raise e
@@ -53,9 +65,6 @@ class BasePluginAction(PluginAction):
             return result
 
 class BasePlugin(Plugin):
-    id: str
-    name: str
-
     def __init__(
         self,
         id: str = "",
@@ -78,7 +87,7 @@ class BasePlugin(Plugin):
             if method is None:
                 raise ValueError("Method cannot be empty!")
 
-            action = BasePluginAction(name, method, plugin=self, args=action_args)
+            action = BasePluginAction(self, name, method, args=action_args)
 
         self.actions.append(action)
         return action
@@ -91,10 +100,12 @@ class BasePlugin(Plugin):
 
     def configure_action(self, action: PluginAction) -> PluginAction: ...
 
-def depends_on_action(plugin_name: str, action_name: str) -> Callable[[T], T]:
-    def decorator(cls: T) -> T:
-        if 'dependencies' not in cls.__dict__:
-            cls.dependencies = {}
+def depends_on_action(
+        plugin_name: str,
+        action_name: str
+    ) -> Callable[[type[T]], type[T]]:
+
+    def decorator(cls: type[T]) -> type[T]:
         if plugin_name not in cls.dependencies:
             cls.dependencies[plugin_name] = set()
         cls.dependencies[plugin_name].add(action_name)

@@ -9,8 +9,8 @@ class FilePlugin(BasePlugin):
         super().__init__(id="file_plugin", name="File Operations")
 
         self.register_action(
-            ListDirAction(parent=self)
+            ListDirAction(plugin=self)
         )
         self.register_action(
-            FileExistsAction(parent=self)
+            FileExistsAction(plugin=self)
         )

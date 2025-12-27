@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from sk_aio.models import BasePlugin
 
 from sk_aio.plugins.debug_plugin.actions import (
@@ -10,26 +12,32 @@ from sk_aio.plugins.debug_plugin.actions import (
 )
 
 class DebugPlugin(BasePlugin):
+    id: ClassVar[str] = "debug_plugin"
+    name: ClassVar[str] = "Debug Plugin"
+
     def __init__(
         self
     ) -> None:
-        super().__init__(id="debug_plugin", name="Debug Plugin")
+        super().__init__(
+            id=DebugPlugin.id,
+            name=DebugPlugin.name
+        )
 
         self.register_action(
-            ConsoleOutputAction(parent=self)
+            ConsoleOutputAction(plugin=self)
         )
         self.register_action(
-            MultipleArgumentsActions(parent=self)
+            MultipleArgumentsActions(plugin=self)
         )
         self.register_action(
-            AsyncAction(parent=self)
+            AsyncAction(plugin=self)
         )
         self.register_action(
-            ErrorAction(parent=self)
+            ErrorAction(plugin=self)
         )
         self.register_action(
-            DependencyAction(parent=self)
+            DependencyAction(plugin=self)
         )
         self.register_action(
-            InProgressAction(parent=self)
+            InProgressAction(plugin=self)
         )

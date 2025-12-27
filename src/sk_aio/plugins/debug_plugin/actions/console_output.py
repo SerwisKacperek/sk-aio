@@ -8,12 +8,12 @@ if TYPE_CHECKING:
     from ..plugin import DebugPlugin
 
 class ConsoleOutputAction(BasePluginAction):
-    def __init__(self, parent: 'DebugPlugin') -> None:
+    def __init__(self, plugin: 'DebugPlugin') -> None:
         super().__init__(
             name="console_output",
             description="Outputs a single string into the console",
             method=self.run,
-            plugin=parent,
+            plugin=plugin,
             args=None
         )
 

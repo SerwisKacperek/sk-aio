@@ -1,4 +1,4 @@
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, ClassVar, TYPE_CHECKING
 
 from sk_aio.api import PluginAPI
 from sk_aio.models import BasePluginAction, depends_on_action
@@ -7,25 +7,29 @@ if TYPE_CHECKING:
     from ..plugin import DebugPlugin
     from sk_aio.plugins.file_plugin.actions import ListDirAction
 
-@depends_on_action('file_plugin', 'list_dir')  # type: ignore[reportArgumentType]
+@depends_on_action('file_plugin', 'list_dir')
 class InProgressAction(BasePluginAction):
+    name: ClassVar[str] = "in_progress"
+    description: ClassVar[Optional[str]] = "Action to debug currently WIP functionality"
+    dependencies: dict[str, set[str]] = {}
+
     def __init__(
         self,
-        parent: 'DebugPlugin'
+        plugin: 'DebugPlugin',
     ) -> None:
         super().__init__(
-            name="in_progress",
-            description="Action to debug currently WIP functionality",
+            name=InProgressAction.name,
             method=self.run,
-            plugin=parent,
-            args=None
+            plugin=plugin,
+            description=InProgressAction.description,
+            args=[]
         )
 
     async def run(
         self,
         api: PluginAPI,
-        list_dir: Optional['ListDirAction'] = None,
         *args,
+        list_dir: Optional['ListDirAction'] = None,
         **kwargs
     ) -> None:
 
@@ -35,6 +39,7 @@ class InProgressAction(BasePluginAction):
 
         api.info("list_dir argument present!")
         result = await list_dir.run(api, "D:/")
+        api.log(str(result))
         api.log("Done")
 
         return

@@ -7,12 +7,12 @@ if TYPE_CHECKING:
     from ..plugin import DebugPlugin
 
 class MultipleArgumentsActions(BasePluginAction):
-    def __init__(self, parent: 'DebugPlugin') -> None:
+    def __init__(self, plugin: 'DebugPlugin') -> None:
         super().__init__(
             name="multiple_arguments",
             description="Requires multiple arguments to be passed to run the action.",
             method=self.run,
-            plugin=parent,
+            plugin=plugin,
             args=[
                 PluginActionArgument(
                     name="arg1",

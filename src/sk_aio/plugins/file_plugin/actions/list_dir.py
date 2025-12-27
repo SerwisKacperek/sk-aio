@@ -8,12 +8,12 @@ if TYPE_CHECKING:
     from ..plugin import FilePlugin
 
 class ListDirAction(BasePluginAction):
-    def __init__(self, parent: 'FilePlugin'):
+    def __init__(self, plugin: 'FilePlugin'):
         super().__init__(
             name="list_dir",
             description="Lists files in the given directory",
             method=self.run,
-            plugin=parent,
+            plugin=plugin,
             args=[
             PluginActionArgument(
                 name="path",
