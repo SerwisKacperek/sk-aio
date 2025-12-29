@@ -9,6 +9,8 @@ if TYPE_CHECKING:
 
 @depends_on_action('file_plugin', 'list_dir')
 class DependencyAction(BasePluginAction):
+    dependencies: dict[str, set[str]] = {}
+
     def __init__(self, plugin: 'DebugPlugin') -> None:
         super().__init__(
             name="dependency_action",
